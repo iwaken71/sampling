@@ -22,10 +22,10 @@ data/p2p-Gnutella04.txt '\t'
 '''
 #
 
-Filename = "data/facebook_combined.txt"
+Filename = "data/com-amazon.ungraph.txt"
 split = '\t'
 WriteFilename = "test.txt"
-title = "facebook"
+title = "amazon"
 
 
 def main():
@@ -40,7 +40,7 @@ def main():
 #	writeGraph(G1)
 #	Show_Graph(G)
 #        Show_Graph(G1)
-	NDD2(G,0.1)
+#	NDD2(G,0.1)
 #       DCDF(G,100)
 #        CCCDF(G)
 #        CCNMSE(G,5,0.25)
@@ -51,11 +51,11 @@ def main():
 #	print(ans)
 #        print("average_shotest_path")
 #        print(AD(G))
-    #    AD2(G,3,0.01)
+#        AD2(G,3,0.01)
        # print(nx.diameter(G))
        # print(nx.average_clustering(G))
-        NMSE2(G,100,3,0.1) #誤差計算 G:元のグラフ,最大次数,サンプリング回数,サンプリングの割合
-     #   CC2(G,10,0.002)
+      #  NMSE2(G,100,3,0.01) #誤差計算 G:元のグラフ,最大次数,サンプリング回数,サンプリングの割合
+        CC2(G,25,0.01)
         print("finish")
 
 def readGraph():
@@ -178,6 +178,7 @@ def CC2(G,n,p):
     sum1 = 0.0
     sum2 = 0.0
     sum3 = 0.0
+    f = open(title+"_BAS_CC.txt", 'w')
     for i in range(0,n):
        # G1 = smp.BFS(G,p)
        # G2 = smp.MHRW(G,p)
@@ -186,12 +187,16 @@ def CC2(G,n,p):
        # sum1 += CC(G1)
        # sum2 += CC(G2)
         val3 = CC(G3)
+        f.write(str(val3))
+        f.write('\n')
         print(val3)
         sum3 += val3
 
     sum1 = sum1/n
     sum2 = sum2/n
     sum3 = sum3/n
+    f.write("BAS_CC_av"+str(sum3))
+    f.close()
 
     print("BFS:"+str(sum1))
     print("MHRW:"+str(sum2))

@@ -377,9 +377,10 @@ def BAS(G,p):
 
         stack = []
         
+        G1nodes = G1.nodes()
         #選ばれたノードとサンプル済のノードをつなぐ
         for node in G.neighbors(next_node):
-            if node in G1.nodes():
+            if node in G1nodes:
                 G1.add_edge(node,next_node)
         count = 3
 
@@ -399,8 +400,9 @@ def BAS(G,p):
 #サンプルされたノードを候補リストから外す
         process.remove(0,process.size-1,next_node)
 #候補リストを更新する
+        G1nodes = G1.nodes()
         for node in G.neighbors(next_node):
-            if node not in G1.nodes():
+            if node not in G1nodes:
                 process.insert(0,process.size-1,int(node))
                 
     return G1

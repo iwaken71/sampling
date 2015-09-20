@@ -19,13 +19,14 @@ data/com-youtube.ungraph.txt '\t'
 data/facebook_combined.txt '\t'
 data/as20.txt '\t'
 data/p2p-Gnutella04.txt '\t' 
+data/com-dblp.txt '\t'
 '''
 #
 
-Filename = "data/com-amazon.ungraph.txt"
+Filename = "data/com-lj.ungraph.txt"
 split = '\t'
 WriteFilename = "test.txt"
-title = "amazon"
+title = "com-lj"
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
 #	writeGraph(G1)
 #	Show_Graph(G)
 #        Show_Graph(G1)
-#	NDD2(G,0.1)
+#	NDD2(G,0.01)
 #       DCDF(G,100)
 #        CCCDF(G)
 #        CCNMSE(G,5,0.25)
@@ -54,8 +55,8 @@ def main():
 #        AD2(G,3,0.01)
        # print(nx.diameter(G))
        # print(nx.average_clustering(G))
-      #  NMSE2(G,100,3,0.01) #誤差計算 G:元のグラフ,最大次数,サンプリング回数,サンプリングの割合
-        CC2(G,25,0.01)
+       # NMSE2(G,100,3,0.01) #誤差計算 G:元のグラフ,最大次数,サンプリング回数,サンプリングの割合
+        CC2(G,30,0.001)
         print("finish")
 
 def readGraph():
@@ -83,7 +84,7 @@ def writeGraph(G,n):
 	    f.close()
         elif n == 3:
 
-	    f = open(title+"_BAS.txt", 'w')
+            f = open(title+"_BAS.txt", 'w')
 	    for pair in G.edges():
 	    	    f.write(str(pair[0]))
 		    f.write('\t')
@@ -156,53 +157,100 @@ def AD2(G,n,p):
     sum1 = 0.0
     sum2 = 0.0
     sum3 = 0.0
+    sample1 = []
+   # normal = AD(G)
+   # print(title+":"+str(normal))
+  #  f = open(title+"_BAS_CC.txt", 'w')
     for i in range(0,n):
-        G1 = smp.BFS(G,p)
-        G2 = smp.MHRW(G,p)
-        G3 = smp.BAS(G,p)
+       # G1 = smp.BFS(G,p)
+        G1 = smp.RWall2(G,p)
+       # G2 = smp.MHRW(G,p)
+       # G3 = smp.BAS(G,p)
         
-        sum1 += AD(G1)
-        sum2 += AD(G2)
-        sum3 += AD(G3)
+        val1 = AD(G1)
+        sample1.append(val1)
+       # sum2 += CC(G2)
+       # val3 = CC(G3)
+   #     f.write(str(val1))
+    ##    f.write('\n')
+        print(val1)
+       # print(val3)
+        sum1 += val1
+    #    sum3 += val3
 
-    sum1 = sum1/n
-    sum2 = sum2/n
-    sum3 = sum3/n
+    #sum1 = sum1/n
+   # sum2 = sum2/n
+   # sum3 = sum3/n
+   # f.write("BAS_CC_av"+str(sum3))
+  #  f.close()
 
-    print("BFS:"+str(sum1))
-    print("MHRW:"+str(sum2))
-    print("BAS:"+str(sum3))
-    return 0
+   # print("RWall:"+str(sum1))
+   # print("MHRW:"+str(sum2))
+   # print("BAS:"+str(sum3))
+    sum1 = 0
+    for x in sample1:
+        sum1 += x
+    ave1 = sum1/len(sample1)
+    
+    var1 = 0
+    for x in sample1:
+        var1 += (x - ave1)*(x - ave1)
+    var1 = var1/len(sample1)
+    hensa1 = math.sqrt(var1)
+    left = ave1 - 1.96 * hensa1 / (math.sqrt(len(sample1)))
+    right = ave1 + 1.96 * hensa1 / (math.sqrt(len(sample1)))
+    print("平均:"+str(ave1))
+    print("標準偏差:"+str(hensa1))
+    print("信頼区間95%"+str(left)+"~"+str(right))
+
 #クラスタ係数を調べる
 def CC2(G,n,p):
     sum1 = 0.0
     sum2 = 0.0
     sum3 = 0.0
+    sample1 = []
     f = open(title+"_BAS_CC.txt", 'w')
     for i in range(0,n):
        # G1 = smp.BFS(G,p)
+        G1 = smp.RWall(G,p)
        # G2 = smp.MHRW(G,p)
-        G3 = smp.BAS(G,p)
+       # G3 = smp.BAS(G,p)
         
-       # sum1 += CC(G1)
+        val1 = CC(G1)
+        sample1.append(val1)
        # sum2 += CC(G2)
-        val3 = CC(G3)
-        f.write(str(val3))
+       # val3 = CC(G3)
+        f.write(str(val1))
         f.write('\n')
-        print(val3)
-        sum3 += val3
+        print(val1)
+       # print(val3)
+        sum1 += val1
+    #    sum3 += val3
 
     sum1 = sum1/n
-    sum2 = sum2/n
-    sum3 = sum3/n
-    f.write("BAS_CC_av"+str(sum3))
+   # sum2 = sum2/n
+   # sum3 = sum3/n
+   # f.write("BAS_CC_av"+str(sum3))
     f.close()
 
-    print("BFS:"+str(sum1))
-    print("MHRW:"+str(sum2))
-    print("BAS:"+str(sum3))
-
-
+    print("RWall:"+str(sum1))
+   # print("MHRW:"+str(sum2))
+   # print("BAS:"+str(sum3))
+    sum1 = 0
+    for x in sample1:
+        sum1 += x
+    ave1 = sum1/len(sample1)
+    
+    var1 = 0
+    for x in sample1:
+        var1 += (x - ave1)*(x - ave1)
+    var1 = var1/len(sample1)
+    hensa1 = math.sqrt(var1)
+    left = ave1 - 1.96 * hensa1 / (math.sqrt(len(sample1)))
+    right = ave1 + 1.96 * hensa1 / (math.sqrt(len(sample1)))
+    print("平均:"+str(ave1))
+    print("標準偏差:"+str(hensa1))
+    print("信頼区間95%"+str(left)+"~"+str(right))
 def DCDF(G,max_k):
 	
 	degree_sequence0 = sorted(nx.degree(G).values()) #次数
@@ -305,13 +353,13 @@ def NMSE2(G,max_k,num,p):
 	Cmax0 = max(C_sequence0) #次数の最大
         cx = np.arange(0, 1.01, 0.01)
 	Clist = [1.0]*(len(cx)) #計算に使うリスト
-	pivot0 = 0
+
 	finish = False
 	for i in range(0,size0):
 		while True:
 			if C_sequence0[i] <= pivot0*0.01:
 				if i == size0-1:
-					Clist[pivot0] = 1.0
+				        Clist[pivot0] = 1.0
 				break #次のiに進む
 			else:
 				if pivot0*0.01 >= Cmax0:
@@ -334,6 +382,7 @@ def NMSE2(G,max_k,num,p):
         Cmap3 = {}
 	for j in range(0,num):
 		G1 = smp.BFS(G,p)
+               # G1 = smp.RWall(G,p)
                 if j == 0:
                         writeGraph(G1,1)
 		degree_sequence1 = sorted(nx.degree(G1).values())
@@ -361,7 +410,7 @@ def NMSE2(G,max_k,num,p):
 				break
 		map1[j] = list1
         	C_sequence1 = sorted(nx.clustering(G1).values())
-		size1 = len(C_sequence1)
+                size1 = len(C_sequence1)
 		Cmax1 = max(C_sequence1)	
 		Clist1 = [1.0]*(len(cx))
 		k1 = 0
@@ -439,7 +488,7 @@ def NMSE2(G,max_k,num,p):
 				break
 		Cmap2[j] = Clist1
 	for j in range(0,num):
-		G1 = smp.BAS(G,p)
+		G1 = smp.RWall2(G,p)
                 if j == 0:
                         writeGraph(G1,3)
 		degree_sequence1 = sorted(nx.degree(G1).values())
@@ -596,7 +645,7 @@ def NMSE2(G,max_k,num,p):
 	
 
 	
-	plt.plot(cx,Cans,label="BFS")
+	plt.plot(cx,Cans,label="RWall")
 	plt.plot(cx,Cans2,label="MHRW")
 	plt.plot(cx,Cans3,label=u"提案手法")
         plt.legend()

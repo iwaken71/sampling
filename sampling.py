@@ -12,7 +12,7 @@ class Blist:
         self.size = 0
         self.map1 = {}
     def insert(self,start,goal,node):
-        size = self.size
+        size = self.lst.count
         if start > goal:
             self.lst.append(node)
             self.put(node)
@@ -62,14 +62,14 @@ class Blist:
             return 0
         num = (start+goal)/2 #真ん中を探す
         tmp = self.lst[num]
-        
+        size = self.lst.count
         if tmp == node:
             self.lst.pop(num)
             num2 = self.minus(node)
             if num2 == 0:
                 return 0
             
-            self.remove(0,self.size-1,node)
+            self.remove(0,size-1,node)
         if node < tmp:
             self.remove(start,num-1,node)
         if tmp < node:
@@ -78,14 +78,14 @@ class Blist:
 
 
     def put(self,node):
-        self.size += 1
+       # self.size += 1
         if self.map1.has_key(node):
             self.map1[node] += 1
         else:
             self.map1[node] = 1
         return 0
     def minus(self,node):
-        self.size -= 1
+       # self.size -= 1
         if self.map1.has_key(node):
             if self.map1[node] == 1:
                 del self.map1[node]
@@ -161,10 +161,13 @@ def BFS(G,p):
                         neighbor = G.neighbors(now_node)
                         for next_node in neighbor:
                                 if next_node not in G1.nodes():
-                                        G1.add_edge(now_node,next_node)
+                                        G1.add_node(now_node)
+                                        G1.add_node(next_node)
                                         process.append(next_node)
                                 else:
-                                        G1.add_edge(now_node,next_node)
+                                        G1.add_node(now_node)
+                                        G1.add_node(next_node)
+ 
                         process.remove(now_node)
                         if nx.number_of_nodes(G1)>=n:
                                 check = True
@@ -173,7 +176,7 @@ def BFS(G,p):
                                 break
                 if check:
                         break
-        return G1
+        return NodeConnect(G,G1)
             
 def MHRW(G,p):
 	if p > 1:
@@ -210,13 +213,14 @@ def MHRW(G,p):
 
                         if p <= value:
 
-                                G1.add_edge(now_node,next_node)
+                               # G1.add_edge(now_node,next_node)
+                                G1.add_node(now_node)
                                # print(next_node)
                                 now_node = next_node
                                 count += 1
                         if(nx.number_of_nodes(G1) >= n):
-                                return G1
-	return G1
+                                return NodeConnect(G,G1)
+	return NodeConnect(G,G1)
 			   
 def RW(G,p):
 	if p > 1:
@@ -405,5 +409,79 @@ def BAS(G,p):
             if node not in G1nodes:
                 process.insert(0,process.size-1,int(node))
                 
+    return G1
+
+def RWall(G,p):
+    
+    check = False
+    while not check:
+        count = 0
+        G1 = nx.Graph()
+        n = int(p*nx.number_of_nodes(G))
+        start_id = random.randint(0,nx.number_of_nodes(G)-1)
+        s_node = nx.nodes(G)[start_id]
+        G1.add_node(s_node)
+    
+        now_node = s_node
+        while True:
+            neighbor_list = G.neighbors(now_node)
+            next_id = random.randint(0,len(neighbor_list)-1)
+            next_node = neighbor_list[next_id]
+
+            G1.add_node(next_node)
+            count += 1
+            for node in G.neighbors(next_node):
+                if node in G1.nodes():
+                    G1.add_edge(next_node,node)
+        
+            if random.random() <= 0.075:
+                next_id = random.randint(0,nx.number_of_nodes(G1)-1)
+                next_node = G1.nodes()[next_id]
+            now_node = next_node
+            if nx.number_of_nodes(G1) >= n:
+                check = True
+                break
+            if count > 50*n:
+                break
+
+
+    return G1
+
+def RWall2(G,p):
+    check = False
+    while not check:
+        count = 0
+        G1 = nx.Graph()
+        n = int(p*nx.number_of_nodes(G))
+        start_id = random.randint(0,nx.number_of_nodes(G)-1)
+        s_node = nx.nodes(G)[start_id]
+        G1.add_node(s_node)
+    
+        now_node = s_node
+        while True:
+            neighbor_list = G.neighbors(now_node)
+            next_id = random.randint(0,len(neighbor_list)-1)
+            next_node = neighbor_list[next_id]
+
+            G1.add_node(next_node)
+            count += 1
+        
+            if random.random() < 0:
+                next_id = random.randint(0,nx.number_of_nodes(G1)-1)
+                next_node = G1.nodes()[next_id]
+            now_node = next_node
+            if nx.number_of_nodes(G1) >= n:
+                check = True
+                break
+            if count > 50*n:
+                break
+    
+    return NodeConnect(G,G1)
+
+def NodeConnect(G,G1):
+    for node in G1.nodes():
+        for node2 in G.neighbors(node):
+            if node2 in G1.nodes():
+                G1.add_edge(node,node2)
     return G1
 

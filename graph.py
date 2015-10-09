@@ -23,19 +23,43 @@ data/com-dblp.txt '\t'
 '''
 #
 
-Filename = "data/com-lj.ungraph.txt"
+Filename = 'data/BA10000.txt'
 split = '\t'
 WriteFilename = "test.txt"
-title = "com-lj"
+title = "amazon"
+NUM =3 
+def SelectGraph(n):
+    global Filename
+    global title
+    if n == 1:
+        Filename = 'data/facebook_combined.txt'
+        title = "facebook"
+
+    elif n == 2:
+        Filename = 'data/email-Enron.txt'
+        title = "email"
+
+    elif n == 3:
+        Filename = 'data/com-amazon.ungraph.txt'
+        title = "amazon"
+
+    elif n == 4:
+        Filename = 'data/com-lj.ungraph.txt'
+        title = "com-lj"
+
+
 
 
 def main():
+        SelectGraph(NUM)
 	G = readGraph()
 #	G = nx.gnp_random_graph(10000,0.2)
 #	G = BA_model_Graph(10)
 #	G =	nx.barabasi_albert_graph(100000,3)
-	print("1")
-       # G2 = MHRW(G,0.1)
+	print("グラフの読み込み終了")
+       # print(GCC(G))
+        #print(myGCC(G,177820130))
+# G2 = MHRW(G,0.1)
 #	G1 = smp.BAS(G,0.25)
 #	print("2")
 #	writeGraph(G1)
@@ -56,7 +80,7 @@ def main():
        # print(nx.diameter(G))
        # print(nx.average_clustering(G))
        # NMSE2(G,100,3,0.01) #誤差計算 G:元のグラフ,最大次数,サンプリング回数,サンプリングの割合
-        CC2(G,30,0.001)
+        CC2(G,30,0.01)
         print("finish")
 
 def readGraph():
@@ -91,6 +115,21 @@ def writeGraph(G,n):
 		    f.write(str(pair[1]))
 		    f.write('\n')
             f.close()
+
+def GCC(G):
+    return nx.transitivity(G)
+def myGCC(G,tri):
+
+    bunbo = 0.0    
+    for node in G.nodes():
+        d = G.degree(node)
+        if d >= 2:
+            bunbo += d*(d-1)
+
+    return 6.0*tri/bunbo
+
+    
+    
 
 #引数Gのグラフの次数分布を表示する
 def NDD(G):
@@ -204,6 +243,54 @@ def AD2(G,n,p):
     print("信頼区間95%"+str(left)+"~"+str(right))
 
 #クラスタ係数を調べる
+def GCC2(G,n,p):
+    sum1 = 0.0
+    sum2 = 0.0
+    sum3 = 0.0
+    sample1 = []
+   # f = open(title+"_BAS_CC.txt", 'w')
+    for i in range(0,n):
+       # G1 = smp.BFS(G,p)
+        G1 = smp.MHRW(G,p)
+       # G2 = smp.MHRW(G,p)
+       # G3 = smp.BAS(G,p)
+        
+        val1 = GCC(G1)
+        sample1.append(val1)
+       # sum2 += CC(G2)
+       # val3 = CC(G3)
+       # f.write(str(val1))
+       # f.write('\n')
+        print(val1)
+       # print(val3)
+        sum1 += val1
+    #    sum3 += val3
+
+    sum1 = sum1/n
+   # sum2 = sum2/n
+   # sum3 = sum3/n
+   # f.write("BAS_CC_av"+str(sum3))
+   # f.close()
+
+    print("RWall:"+str(sum1))
+   # print("MHRW:"+str(sum2))
+   # print("BAS:"+str(sum3))
+    sum1 = 0
+    for x in sample1:
+        sum1 += x
+    ave1 = sum1/len(sample1)
+    
+    var1 = 0
+    for x in sample1:
+        var1 += (x - ave1)*(x - ave1)
+    var1 = var1/len(sample1)
+    hensa1 = math.sqrt(var1)
+    left = ave1 - 1.96 * hensa1 / (math.sqrt(len(sample1)))
+    right = ave1 + 1.96 * hensa1 / (math.sqrt(len(sample1)))
+    print("平均:"+str(ave1))
+    print("標準偏差:"+str(hensa1))
+    print("信頼区間95%"+str(left)+"~"+str(right))
+
 def CC2(G,n,p):
     sum1 = 0.0
     sum2 = 0.0
@@ -251,6 +338,10 @@ def CC2(G,n,p):
     print("平均:"+str(ave1))
     print("標準偏差:"+str(hensa1))
     print("信頼区間95%"+str(left)+"~"+str(right))
+
+
+
+
 def DCDF(G,max_k):
 	
 	degree_sequence0 = sorted(nx.degree(G).values()) #次数

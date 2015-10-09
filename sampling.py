@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import math
+import graph
 
 class Blist:
     def __init__(self):
@@ -414,8 +415,12 @@ def BAS(G,p):
 def RWall(G,p):
     
     check = False
+    
     while not check:
         count = 0
+        tricount = 0
+        tridic = {}
+        degreedic = {}
         G1 = nx.Graph()
         n = int(p*nx.number_of_nodes(G))
         start_id = random.randint(0,nx.number_of_nodes(G)-1)
@@ -423,27 +428,79 @@ def RWall(G,p):
         G1.add_node(s_node)
     
         now_node = s_node
+        tridic[now_node] = 0
+        degreedic[now_node] = 0
         while True:
             neighbor_list = G.neighbors(now_node)
             next_id = random.randint(0,len(neighbor_list)-1)
             next_node = neighbor_list[next_id]
+            trinodelist = []
+            is_new_node = next_node not in G1.nodes()
+            if is_new_node:
+                G1.add_node(next_node)
+                tridic[next_node] = 0
+                degreedic[next_node] = 0
 
-            G1.add_node(next_node)
             count += 1
-            for node in G.neighbors(next_node):
-                if node in G1.nodes():
-                    G1.add_edge(next_node,node)
-        
-            if random.random() <= 0.075:
+            if is_new_node:
+                for node in G.neighbors(next_node):
+                    if node in G1.nodes():
+                        G1.add_edge(next_node,node)
+                        if(degreedic.has_key(next_node)):
+                            degreedic[next_node] = degreedic[next_node] + 1
+                        else: 
+                            degreedic[next_node] = 1
+                        degreedic[node] = degreedic[node] + 1
+                        trinodelist.append(node)
+            
+            if len(trinodelist) >= 2 and is_new_node:
+                for i in range(0,len(trinodelist)-1):
+                    for j in range(i+1,len(trinodelist)):
+                        if trinodelist[j] in G1.neighbors(trinodelist[i]):
+                            tricount += 1
+                            if tridic.has_key(next_node):
+                                tridic[next_node] = tridic[next_node] + 1
+                            else:
+                                tridic[next_node] = 1
+                            if tridic.has_key(trinodelist[j]):
+                                tridic[trinodelist[j]] = tridic[trinodelist[j]] + 1
+                            else:
+                                tridic[trinodelist[j]] = 1
+                            if tridic.has_key(trinodelist[i]):
+                                tridic[trinodelist[i]] = tridic[trinodelist[i]] + 1
+                            else:
+                                tridic[trinodelist[i]] = 1
+
+            
+            if random.random() < 0.75:
                 next_id = random.randint(0,nx.number_of_nodes(G1)-1)
                 next_node = G1.nodes()[next_id]
-            now_node = next_node
-            if nx.number_of_nodes(G1) >= n:
-                check = True
-                break
+                now_node = next_node
+            if is_new_node:
+                now_node = next_node
+                if nx.number_of_nodes(G1) >= n:
+                    check = True
+                    break
             if count > 50*n:
                 break
+    print("triangleの数"+str(tricount))
+    # 
+    ''''
+    tri = list(nx.triangles(G1).values())
+    sum1 = 0
+    for num in tri:
+        sum1 += int(num)
+    '''
+    print(graph.myGCC(G1,tricount))
+    print(graph.GCC(G1))
+    sumcluster = 0
+    for node in G1.nodes():
+        if degreedic.has_key(node):
+            degree = degreedic[node]
+            if degree >= 2 and tridic.has_key(node):
+                sumcluster += 2.0*tridic[node]/(degree*(degree-1))
 
+    print ("AverageCC:"+str(sumcluster/nx.number_of_nodes(G1)))
 
     return G1
 

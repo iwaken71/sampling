@@ -472,7 +472,7 @@ def RWall(G,p):
                                 tridic[trinodelist[i]] = 1
 
             
-            if random.random() < 0.75:
+            if random.random() < 0.075:
                 next_id = random.randint(0,nx.number_of_nodes(G1)-1)
                 next_node = G1.nodes()[next_id]
                 now_node = next_node
@@ -541,4 +541,68 @@ def NodeConnect(G,G1):
             if node2 in G1.nodes():
                 G1.add_edge(node,node2)
     return G1
+
+def Estimate(G,p):
+    A = []
+    sumA = 0.0
+    sumB = 0.0
+    sumC = 0.0
+    sumD = 0.0
+    n = (int)(p*nx.number_of_nodes(G))
+    start_id = random.randint(0,nx.number_of_nodes(G)-1)
+    s_node = nx.nodes(G)[start_id]
+    A.append(s_node)
+    now_node = s_node
+    count = 0
+
+   # G1.add_node(s_node)
+    for i in range (0,n):
+         
+         neighbor_list = G.neighbors(now_node)
+         next_id = random.randint(0,len(neighbor_list)-1)
+         next_node = neighbor_list[next_id]
+         A.append(next_node)
+         degree = len(G.neighbors(now_node))
+         sumB += 1.0/degree
+         sumD += degree-1
+         if i >= 2:
+            count += 1
+            if A[i-2] in G.neighbors(A[i]):
+                degree = (len(G.neighbors(A[i-1])))
+                sumA += 1.0/(degree-1)
+                sumC += degree
+         now_node = next_node
+
+    sumA = sumA/count
+    sumB = sumB/n
+    sumC = sumC/count
+    sumD = sumD/n
+   # print(sumA/sumB)
+    print(sumC/sumD)
+    return sumA/sumB
+
+def Monte(G,p):
+    CCsum = 0.0
+    count = 0
+    n = (int)(p*nx.number_of_nodes(G))
+    for i in range(0,n):
+        start_id = random.randint(0,nx.number_of_nodes(G)-1)
+        s_node = nx.nodes(G)[start_id]
+       # now_node = s_node
+        CCsum += nx.clustering(G,s_node)
+        count += 1
+        print(count)
+  ##
+        '''    
+    for i in range(1,n):
+        neighbor_list = G.neighbors(now_node)
+        next_id = random.randint(0,len(neighbor_list)-1)
+        next_node = neighbor_list[next_id]
+        CCsum += nx.clustering(G,next_node)
+        count += 1
+        now_node = next_node
+        '''
+    ans = CCsum/count
+    print(ans)
+    return ans
 

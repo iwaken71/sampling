@@ -27,28 +27,31 @@ Filename = 'data/BA10000.txt'
 split = '\t'
 WriteFilename = "test.txt"
 title = "amazon"
-NUM =3 
+NUM = 3
+TrueValue = 0
 def SelectGraph(n):
     global Filename
     global title
+    global TrueValue
     if n == 1:
         Filename = 'data/facebook_combined.txt'
         title = "facebook"
+        TrueValue = 0.6055
 
     elif n == 2:
         Filename = 'data/email-Enron.txt'
         title = "email"
+        TrueValue = 0.497
 
     elif n == 3:
         Filename = 'data/com-amazon.ungraph.txt'
         title = "amazon"
+        TrueValue = 0.3967
 
     elif n == 4:
         Filename = 'data/com-lj.ungraph.txt'
         title = "com-lj"
-
-
-
+        TrueValue = 0.2843
 
 def main():
         SelectGraph(NUM)
@@ -81,6 +84,8 @@ def main():
        # print(nx.average_clustering(G))
        # NMSE2(G,100,3,0.01) #誤差計算 G:元のグラフ,最大次数,サンプリング回数,サンプリングの割合
         CC2(G,30,0.01)
+   #     for i in range(0,100):
+    #        smp.RWall(G,0.001)
         print("finish")
 
 def readGraph():
@@ -296,7 +301,8 @@ def CC2(G,n,p):
     sum2 = 0.0
     sum3 = 0.0
     sample1 = []
-    f = open(title+"_BAS_CC.txt", 'w')
+    error = []
+   # f = open(title+"_BAS_CC.txt", 'w')
     for i in range(0,n):
        # G1 = smp.BFS(G,p)
         G1 = smp.RWall(G,p)
@@ -307,9 +313,10 @@ def CC2(G,n,p):
         sample1.append(val1)
        # sum2 += CC(G2)
        # val3 = CC(G3)
-        f.write(str(val1))
-        f.write('\n')
+    #    f.write(str(val1))
+     #   f.write('\n')
         print(val1)
+        error.append((val1-TrueValue)^2)
        # print(val3)
         sum1 += val1
     #    sum3 += val3
@@ -318,7 +325,7 @@ def CC2(G,n,p):
    # sum2 = sum2/n
    # sum3 = sum3/n
    # f.write("BAS_CC_av"+str(sum3))
-    f.close()
+   # f.close()
 
     print("RWall:"+str(sum1))
    # print("MHRW:"+str(sum2))
@@ -327,6 +334,10 @@ def CC2(G,n,p):
     for x in sample1:
         sum1 += x
     ave1 = sum1/len(sample1)
+    sum2 = 0
+    for x in error:
+        sum2 += x
+    ave2 = sum2/(len(error))
     
     var1 = 0
     for x in sample1:
@@ -338,7 +349,7 @@ def CC2(G,n,p):
     print("平均:"+str(ave1))
     print("標準偏差:"+str(hensa1))
     print("信頼区間95%"+str(left)+"~"+str(right))
-
+    print("誤差"+str(ave2))
 
 
 

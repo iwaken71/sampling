@@ -28,7 +28,7 @@ split = '\t'
 WriteFilename = "test.txt"
 title = "amazon"
 NUM = 3
-TrueValue = 0
+TrueValue = 0.0
 def SelectGraph(n):
     global Filename
     global title
@@ -52,7 +52,14 @@ def SelectGraph(n):
         Filename = 'data/com-lj.ungraph.txt'
         title = "com-lj"
         TrueValue = 0.2843
-
+    elif n == 5:
+        Filename = 'data/com-dblp.txt'
+        title = "dblp"
+        TrueValue = 0.6324
+    elif n == 6:
+        Filename = 'data/loc-gowalla_edges.txt'
+        title = "gowalla"
+        TrueValue = 0.0
 def main():
         SelectGraph(NUM)
 	G = readGraph()
@@ -68,7 +75,7 @@ def main():
 #	writeGraph(G1)
 #	Show_Graph(G)
 #        Show_Graph(G1)
-#	NDD2(G,0.01)
+#	NDD(smp.RWall(G,0.01))
 #       DCDF(G,100)
 #        CCCDF(G)
 #        CCNMSE(G,5,0.25)
@@ -81,11 +88,18 @@ def main():
 #        print(AD(G))
 #        AD2(G,3,0.01)
        # print(nx.diameter(G))
-       # print(nx.average_clustering(G))
        # NMSE2(G,100,3,0.01) #誤差計算 G:元のグラフ,最大次数,サンプリング回数,サンプリングの割合
-        CC2(G,30,0.01)
-   #     for i in range(0,100):
-    #        smp.RWall(G,0.001)
+    #    CC2(G,30,0.1)
+        lst = []
+        for i in range(0,25):
+            lst.append(smp.RWall3(G,0.01))
+          #  lst.append(AD(G1));
+      #      lst.append(smp.Estimate(G,0.01))
+           # lst.append(smp.RWall3(G,0.01))
+            print(lst[i])
+  #      for i in range(0,25):
+   #         print(lst[i])
+        Samp(lst)
         print("finish")
 
 def readGraph():
@@ -134,7 +148,8 @@ def myGCC(G,tri):
     return 6.0*tri/bunbo
 
     
-    
+def AverageDegree(G):
+    return 2.0*nx.number_of_edges(G)/nx.number_of_nodes(G) 
 
 #引数Gのグラフの次数分布を表示する
 def NDD(G):
@@ -305,7 +320,7 @@ def CC2(G,n,p):
    # f = open(title+"_BAS_CC.txt", 'w')
     for i in range(0,n):
        # G1 = smp.BFS(G,p)
-        G1 = smp.RWall(G,p)
+        G1 = smp.Snowball_Sampling(G,p)
        # G2 = smp.MHRW(G,p)
        # G3 = smp.BAS(G,p)
         
@@ -316,7 +331,7 @@ def CC2(G,n,p):
     #    f.write(str(val1))
      #   f.write('\n')
         print(val1)
-        error.append((val1-TrueValue)^2)
+#        error.append((((float)val1-(float)TrueValue))^2)
        # print(val3)
         sum1 += val1
     #    sum3 += val3
@@ -337,7 +352,7 @@ def CC2(G,n,p):
     sum2 = 0
     for x in error:
         sum2 += x
-    ave2 = sum2/(len(error))
+#    ave2 = sum2/(len(error))
     
     var1 = 0
     for x in sample1:
@@ -349,8 +364,23 @@ def CC2(G,n,p):
     print("平均:"+str(ave1))
     print("標準偏差:"+str(hensa1))
     print("信頼区間95%"+str(left)+"~"+str(right))
-    print("誤差"+str(ave2))
+ #   print("誤差"+str(ave2))
 
+def Samp(lst):
+    sum1 = 0.0
+    for x in lst:
+        sum1 += x
+    ave1 = sum1/len(lst)
+    var1 = 0.0
+    for x in lst:
+        var1 += (x-ave1)*(x-ave1)
+    var1 = var1/len(lst)
+    hensa1 = math.sqrt(var1)
+    left = ave1 - 1.96 * hensa1/(math.sqrt(len(lst)))
+    right = ave1 + 1.96 * hensa1/(math.sqrt(len(lst)))
+    print("平均:"+str(ave1))          
+    print("標準偏差:"+str(hensa1))    
+    print("信頼区間95%"+str(left)+"~"+str(right))
 
 
 def DCDF(G,max_k):
@@ -1155,6 +1185,7 @@ def NMSE(G0,max_k,num,p):
 	plt.show()
 	
 	return 0
+
 
 if __name__ == "__main__":
     main()

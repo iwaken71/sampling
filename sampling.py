@@ -186,6 +186,8 @@ def MHRW(G,p):
        # print(n)
         G1 = nx.Graph()
 	d = {}
+        count2 = 0
+        cc = 0.0
 	def Q(G,v):
 		if d.has_key(v):
 			return d[v]
@@ -216,20 +218,25 @@ def MHRW(G,p):
 
                                # G1.add_edge(now_node,next_node)
                                 G1.add_node(now_node)
+                                cc += nx.clustering(G,now_node)
+                               # count2 += 1
+
                                # print(next_node)
                                 now_node = next_node
                                 count += 1
-                        if(nx.number_of_nodes(G1) >= n):
-                                return NodeConnect(G,G1)
-	return NodeConnect(G,G1)
+                        if(count >= n):
+                                return cc/count
+	return cc/count
 			   
 def RW(G,p):
 	if p > 1:
 		p = 1
 	n = int(p*nx.number_of_nodes(G))
 	G1 = nx.Graph()
+        
 	while nx.number_of_nodes(G1) < n:
 		count = 0
+                cc = 0.0
 		start_id = random.randint(0,nx.number_of_nodes(G)-1)
 		s_node = nx.nodes(G)[start_id]
 		now_node = s_node
@@ -240,10 +247,11 @@ def RW(G,p):
 			next_node = neighber_list[next_id]
 			G1.add_edge(now_node,next_node)
 			count += 1
+                        cc += nx.clustering(G,now_node)
             
 			now_node = next_node
-			if nx.number_of_nodes(G1) >= n:
-				break
+                        if count >= n:#nx.number_of_nodes(G1) >= n:
+				return cc/count
         #print(now_node)
         #print(G.neighbors(now_node))
    
@@ -482,15 +490,16 @@ def RWall(G,p):
                     check = True
                     break
             if count > 50*n:
+               # check = True
                 break
-    print("triangleの数"+str(tricount))
+   # print("triangleの数"+str(tricount))
     # 
     ''''
     tri = list(nx.triangles(G1).values())
     sum1 = 0
     for num in tri:
         sum1 += int(num)
-    '''
+    
     print(graph.myGCC(G1,tricount))
     print(graph.GCC(G1))
     sumcluster = 0
@@ -501,7 +510,7 @@ def RWall(G,p):
                 sumcluster += 2.0*tridic[node]/(degree*(degree-1))
 
     print ("AverageCC:"+str(sumcluster/nx.number_of_nodes(G1)))
-
+''' 
     return G1
 
 def RWall2(G,p):
@@ -543,7 +552,7 @@ def NodeConnect(G,G1):
     return G1
 
 def Estimate(G,p):
-    A = []
+    sample_node= []
     sumA = 0.0
     sumB = 0.0
     sumC = 0.0
@@ -551,7 +560,7 @@ def Estimate(G,p):
     n = (int)(p*nx.number_of_nodes(G))
     start_id = random.randint(0,nx.number_of_nodes(G)-1)
     s_node = nx.nodes(G)[start_id]
-    A.append(s_node)
+    sample_node.append(s_node)
     now_node = s_node
     count = 0
 
@@ -561,14 +570,14 @@ def Estimate(G,p):
          neighbor_list = G.neighbors(now_node)
          next_id = random.randint(0,len(neighbor_list)-1)
          next_node = neighbor_list[next_id]
-         A.append(next_node)
+         sample_node.append(next_node)
          degree = len(G.neighbors(now_node))
          sumB += 1.0/degree
          sumD += degree-1
          if i >= 2:
             count += 1
-            if A[i-2] in G.neighbors(A[i]):
-                degree = (len(G.neighbors(A[i-1])))
+            if sample_node[i-2] in G.neighbors(sample_node[i]):
+                degree = (len(G.neighbors(sample_node[i-1])))
                 sumA += 1.0/(degree-1)
                 sumC += degree
          now_node = next_node
@@ -578,7 +587,7 @@ def Estimate(G,p):
     sumC = sumC/count
     sumD = sumD/n
    # print(sumA/sumB)
-    print(sumC/sumD)
+  #  print(sumC/sumD)
     return sumA/sumB
 
 def Monte(G,p):
@@ -606,3 +615,230 @@ def Monte(G,p):
     print(ans)
     return ans
 
+def Snowball_Sampling(G,p):
+    n = (int)(p*nx.number_of_nodes(G))
+    G1 = nx.Graph()
+    process = []
+    wightdic = {}
+    roulette = []
+    start_id = random.randint(0,nx.number_of_nodes(G)-1)
+    s_node = nx.nodes(G)[start_id]
+    G1.add_node(s_node)
+    for node in G.neighbors(s_node):
+        process.append(node)
+        degree = nx.degree(G,node)
+        wightdic[node] = degree*degree*degree
+
+    for i in range(1,n):
+        roulette = []
+        for node in process:
+            num = wightdic[node]
+            for j in range(0,num):
+                roulette.append(node)
+
+        random_id = random.randint(0,len(roulette)-1)
+        selected_node = roulette[random_id]
+
+        neighbor = G.neighbors(selected_node)
+        for node in neighbor:
+            if node in G1.nodes():
+                G1.add_edge(node,selected_node)
+            else:
+                if node not in process:
+                    process.append(node)
+                    wightdic[node] = nx.degree(G,node)*nx.degree(G,node)
+        process.remove(selected_node)
+        wightdic.pop(selected_node)
+
+
+
+    return G1
+
+def RWall3(G,p):
+    
+    check = False
+    
+    while not check:
+        count = 0
+    #    tricount = 0
+        tridic = {}
+        degreedic = {}
+        sampled = []
+        neighbordic = {}
+       # G1 = nx.Graph()
+        n = int(p*nx.number_of_nodes(G))
+        start_id = random.randint(0,nx.number_of_nodes(G)-1)
+        s_node = nx.nodes(G)[start_id]
+       # G1.add_node(s_node)
+        neighbordic[s_node] = []
+        sampled.append(s_node)
+    
+        now_node = s_node
+        tridic[now_node] = 0
+        degreedic[now_node] = 0
+        while True:
+            neighbor_list = G.neighbors(now_node)
+
+            next_id = random.randint(0,len(neighbor_list)-1)
+            next_node = neighbor_list[next_id]
+            trinodelist = []
+            is_new_node = next_node not in sampled
+            if is_new_node:
+                sampled.append(next_node)
+                neighbordic[next_node] = []
+               # G1.add_node(next_node)
+                tridic[next_node] = 0
+                degreedic[next_node] = 0
+
+            count += 1
+            if is_new_node:
+                for node in G.neighbors(next_node):
+                    if node in sampled:
+                        list1 = neighbordic[node]
+                        list1.append(next_node)
+                        neighbordic[node] = list1
+                        list2 = neighbordic[next_node]
+                        list2.append(node)
+                        neighbordic[next_node] = list2
+
+                        #G1.add_edge(next_node,node)
+                        if(degreedic.has_key(next_node)):
+                            degreedic[next_node] = degreedic[next_node] + 1
+                        else: 
+                            degreedic[next_node] = 1
+                        degreedic[node] = degreedic[node] + 1
+                        trinodelist.append(node)
+            
+            if len(trinodelist) >= 2 and is_new_node:
+                for i in range(0,len(trinodelist)-1):
+                    for j in range(i+1,len(trinodelist)):
+                        if trinodelist[j] in neighbordic[trinodelist[i]]:
+     #                       tricount += 1
+                            if tridic.has_key(next_node):
+                                tridic[next_node] = tridic[next_node] + 1
+                            else:
+                                tridic[next_node] = 1
+                            if tridic.has_key(trinodelist[j]):
+                                tridic[trinodelist[j]] = tridic[trinodelist[j]] + 1
+                            else:
+                                tridic[trinodelist[j]] = 1
+                            if tridic.has_key(trinodelist[i]):
+                                tridic[trinodelist[i]] = tridic[trinodelist[i]] + 1
+                            else:
+                                tridic[trinodelist[i]] = 1
+
+            
+            if random.random() < 0.075:
+                next_id = random.randint(0,len(sampled)-1)
+                next_node = sampled[next_id]
+                now_node = next_node
+            if is_new_node:
+                now_node = next_node
+                #
+                '''
+                if len(sampled) >= n:
+                    check = True
+                    break
+                '''
+            if count > n:
+    #            print (len(sampled))
+                check = True
+                break
+   # print("triangleの数"+str(tricount))
+    # 
+    ''''
+    tri = list(nx.triangles(G1).values())
+    sum1 = 0
+    for num in tri:
+        sum1 += int(num)
+    '''
+   # print(graph.myGCC(G1,tricount))
+   # print(graph.GCC(G1))
+    sumcluster = 0
+    for node in sampled:
+        if degreedic.has_key(node):
+            degree = degreedic[node]
+            if degree >= 2 and tridic.has_key(node):
+                sumcluster += 2.0*tridic[node]/(degree*(degree-1))
+    ans = sumcluster/len(sampled)
+   # print (str(ans))
+    av_degree = 0.0
+   # for degree in degreedic.values():
+    #    av_degree += degree
+   # av_degree = av_degree/(len(degreedic.values()))
+   # print(str(av_degree))
+    return ans
+
+def FS(G,m):
+     
+    check = False
+    
+    while not check:
+        count = 0
+        tricount = 0
+        tridic = {}
+        degreedic = {}
+        G1 = nx.Graph()
+        n = int(p*nx.number_of_nodes(G))
+        start_id = random.randint(0,nx.number_of_nodes(G)-1)
+        s_node = nx.nodes(G)[start_id]
+        G1.add_node(s_node)
+    
+        now_node = s_node
+        tridic[now_node] = 0
+        degreedic[now_node] = 0
+        while True:
+            neighbor_list = G.neighbors(now_node)
+            next_id = random.randint(0,len(neighbor_list)-1)
+            next_node = neighbor_list[next_id]
+            trinodelist = []
+            is_new_node = next_node not in G1.nodes()
+            if is_new_node:
+                G1.add_node(next_node)
+                tridic[next_node] = 0
+                degreedic[next_node] = 0
+
+            count += 1
+            if is_new_node:
+                for node in G.neighbors(next_node):
+                    if node in G1.nodes():
+                        G1.add_edge(next_node,node)
+                        if(degreedic.has_key(next_node)):
+                            degreedic[next_node] = degreedic[next_node] + 1
+                        else: 
+                            degreedic[next_node] = 1
+                        degreedic[node] = degreedic[node] + 1
+                        trinodelist.append(node)
+            
+            if len(trinodelist) >= 2 and is_new_node:
+                for i in range(0,len(trinodelist)-1):
+                    for j in range(i+1,len(trinodelist)):
+                        if trinodelist[j] in G1.neighbors(trinodelist[i]):
+                            tricount += 1
+                            if tridic.has_key(next_node):
+                                tridic[next_node] = tridic[next_node] + 1
+                            else:
+                                tridic[next_node] = 1
+                            if tridic.has_key(trinodelist[j]):
+                                tridic[trinodelist[j]] = tridic[trinodelist[j]] + 1
+                            else:
+                                tridic[trinodelist[j]] = 1
+                            if tridic.has_key(trinodelist[i]):
+                                tridic[trinodelist[i]] = tridic[trinodelist[i]] + 1
+                            else:
+                                tridic[trinodelist[i]] = 1
+
+            
+            if random.random() < 0.075:
+                next_id = random.randint(0,nx.number_of_nodes(G1)-1)
+                next_node = G1.nodes()[next_id]
+                now_node = next_node
+            if is_new_node:
+                now_node = next_node
+                if nx.number_of_nodes(G1) >= n:
+                    check = True
+                    break
+            if count > 50*n:
+               # check = True
+                break
+   

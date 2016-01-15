@@ -100,7 +100,7 @@ def main():
 #       DCDF(G,100)
 #        CCCDF(G)
 #        CCNMSE(G,5,0.25)
-#	NDD(G1)
+    #NDD(G)
 #        G2 = CRW(G,0.25)
 #        NDD(G2)
 #        CCCDF(G2)
@@ -136,7 +136,7 @@ def main():
             Samp(lst)
             print("平均二乗誤差:"+str(error))
 
-        Jikken(G,25,0.01)
+        Jikken(G,100,0.01,visual=False)
        # NN = 25
        # for i in xrange(NN):
            # smp.Estimate(G,0.01)
@@ -209,7 +209,7 @@ def Soukan(G):
     return r
 
 
-def Jikken(G,N,p):
+def Jikken(G,N,p,visual = True):
     lst1 = [] #RW
     lst2 = [] #MHRW
    # lst3 = [] #iwasaki
@@ -217,19 +217,23 @@ def Jikken(G,N,p):
     lst5 = [] #Estimate_kairyou
     error1 = 0.0
     shinchi = TrueValue
+    '''
     print("RW")
     for i in range(0,N):
         lst1.append(smp.RW(G,p))
         error1 += (lst1[i]-shinchi)*(lst1[i]-shinchi)
-        print(lst1[i])
+        if visual:
+            print(lst1[i])
     error1 = error1/N
     error1 = math.sqrt(error1)
+    '''
     print("MHRW")
     error2 = 0.0
     for i in range(0,N):
         lst2.append(smp.MHRW(G,p))
         error2 += (lst2[i]-shinchi)*(lst2[i]-shinchi)
-        print(lst2[i])
+        if visual:
+            print(lst2[i])
     error2 = error2/N
     error2 = math.sqrt(error2)
     print("iwasaki")
@@ -245,7 +249,8 @@ def Jikken(G,N,p):
     for i in range(0,N):
         lst4.append(smp.Estimate(G,p))
         error4 += (lst4[i]-shinchi)*(lst4[i]-shinchi)
-        print(lst4[i])
+        if visual:
+            print(lst4[i])
     error4 = error4/N
     error4 = math.sqrt(error4)
     print("improve")
@@ -253,12 +258,13 @@ def Jikken(G,N,p):
     for i in range(0,N):
         lst5.append(smp.Estimate2(G,p))
         error5 += (lst5[i]-shinchi)*(lst5[i]-shinchi)
-        print(lst5[i])
+        if visual:
+            print(lst5[i])
     error5 = error5/N
     error5 = math.sqrt(error5)
-    print("RW")
-    Samp(lst1)
-    print("平均二乗誤差:"+str(error1))
+   # print("RW")
+    #Samp(lst1)
+    #print("平均二乗誤差:"+str(error1))
     print("MHRW")
     Samp(lst2)
     print("平均二乗誤差:"+str(error2))

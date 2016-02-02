@@ -125,7 +125,7 @@ def plotCC(lst):
     plt.plot(x,base)
     plt.savefig(graph.title+"_CC.png")
 
-def CC(G,node):
+def CC2(G,node):
     n_list = nx.neighbors(G,node)
     degree = len(n_list)
     if degree <= 1:
@@ -225,25 +225,22 @@ def BFS(G,p):
         return NodeConnect(G,G1)
 
 def MHRW(G,p):
-        if p > 1:
-	    p = 1
-	n = int(p*nx.number_of_nodes(G))
-       # print(n)
-        G1 = nx.Graph()
+        if p <= 1:
+            n = int(p*nx.number_of_nodes(G))
+        else:
+            n = p
 	d = {}
         ccdic = {}
         ndic = {}
         cost = [0]
-        count2 = 0
         cc = 0.0
-        nodes = set([])
+        sampled_node = []
 	def Q(G,v):
 	    if d.has_key(v):
 		return d[v]
 	    else:
 		ans = float(len(Neighbor(G,v)))
 		d[v] = ans
- #               cost[0] += 1
 		return ans
         def CC(G,v):
             if ccdic.has_key(v):
@@ -263,7 +260,7 @@ def MHRW(G,p):
                         if n_list[j] in n2_list:
                             tri += 1
 
-            ans =  nx.clustering(G,v)#float(tri)/count2
+            ans =  float(tri)/count2
             ccdic[v] = ans
             return ans
 
@@ -272,12 +269,12 @@ def MHRW(G,p):
                 return ndic[v]
             else:
                 lst = nx.neighbors(G,v)
-                cost[0] += 1
+                #cost[0] += 1
                 ndic[v] = lst
             return lst
 
     # a non-zero degree seed is selected at random
-	while nx.number_of_nodes(G1) < n:
+	while True:
 	        count = 0
 	        tmp = 0
                 while tmp <= 0:
@@ -286,7 +283,9 @@ def MHRW(G,p):
                         tmp = len(G.neighbors(s_node))
 
                 now_node = s_node
-                nodes.add(now_node)
+                sampled_node.append(now_node)
+                cc += CC(G,now_node)
+                count += 1
                 while count < 100*n:
 
                         neighber_list = Neighbor(G,now_node)
@@ -296,24 +295,16 @@ def MHRW(G,p):
                         value = Q(G,now_node)/Q(G,next_node)
 
                         if p <= value:
-
-                                #G1.add_edge(now_node,next_node)
-                               # G1.add_node(now_node)
-
-                                cc += CC(G,now_node)
-                               # count2 += 1
-
-                               # print(next_node)
                                 now_node = next_node
-#                                cost[0] += 1
-                                nodes.add(now_node)
+                                cc += CC(G,now_node)
+                                sampled_node.append(now_node)
                                 count += 1
-                       # else:
-                       #         cc += nx.clustering(G,now_node)
-                      #          count += 1
-                        if(cost[0] >= n):
-                               # print(len(list(nodes)))
-                               # print(cost[0])
+                        else:
+                                count += 1
+                                cc += CC(G,now_node)
+                                sampled_node.append(now_node)
+
+                        if(cost[0] >= n or count >= n):
                                 return cc/count
 	return cc/count
 
@@ -370,6 +361,72 @@ def MHRW_plot(G,p):
                         if(count >= n):
                                 return y
 	return cc/count
+
+def RWRW(G,p):
+    if p > 1:
+        n = p
+    else:
+        n = int(p*nx.number_of_nodes(G))
+    ccdic = {}
+    ndic = {}
+    cost = [0]
+    def CC(G,v):
+        if ccdic.has_key(v):
+            return ccdic[v]
+        else:
+            n_list = Neighbor(G,v)
+            degree = len(n_list)
+            if degree <= 1:
+                return 0
+            tri = 0
+            count = 0
+            for i in range(0,degree-1):
+                n2_list = Neighbor(G,n_list[i])
+                for j in range(i+1,degree):
+                    count += 1
+                    if n_list[j] in n2_list:
+                        tri += 1
+            ans =  float(tri)/count
+        ccdic[v] = ans
+        return ans
+    def Neighbor(G,v):
+        if ndic.has_key(v):
+            return ndic[v]
+        else:
+            lst = nx.neighbors(G,v)
+            cost[0] += 1
+            ndic[v] = lst
+        return lst
+
+    while True:
+        count = 0
+        cc = 0.0
+        sumA = 0.0
+        sumB = 0.0
+        start_id = random.randint(0,nx.number_of_nodes(G)-1)
+	s_node = nx.nodes(G)[start_id]
+	now_node = s_node
+        cc += CC(G,now_node)/(len(Neighbor(G,now_node)))
+        sumB += 1.0/len(Neighbor(G,now_node))
+        count += 1
+        while count < n*100:
+            neighbor_list = Neighbor(G,now_node)
+	    next_id = random.randint(0,len(neighbor_list)-1)
+	    next_node = neighbor_list[next_id]
+
+            now_node = next_node
+            count += 1
+            degree = len(Neighbor(G,now_node))
+            cc += CC(G,now_node)/degree
+            sumB += 1.0/degree
+            if count >= n or cost[0] >= n:
+                return cc/sumB
+
+    return cc/sumB
+
+
+
+
 
 def RW(G,p):
 	if p > 1:
@@ -867,11 +924,10 @@ def NodeConnect(G,G1):
                 G1.add_edge(node,node2)
     return G1
 
-def Estimate(G,p,Kairyou = False):
-#    ccdic = {}
+def Estimate(G,p):
     ndic = {}
     cost = [0]
-
+    nodes = set([])
     def Neighbor(G,v):
         if ndic.has_key(v):
             return ndic[v]
@@ -883,68 +939,48 @@ def Estimate(G,p,Kairyou = False):
     sample_node= []
     sumA = 0.0
     sumB = 0.0
-    sumC = 0.0
-    sumD = 0.0
-    nodes = set([])
-   # G1 = nx.Graph()
-    n = (int)(p*nx.number_of_nodes(G))
-
-
+  #  sumC = 0.0
+  #  sumD = 0.0
+    if p <= 1:
+        n = (int)(p*nx.number_of_nodes(G))
+    else:
+        n = p
     s_node = random.choice(G.nodes())
     sample_node.append(s_node)
     now_node = s_node
+    #nodes.add(now_node)
     count = 0
-    nodes.add(now_node)
-   # G1.add_node(s_node)
-    for i in range (1,n):
+    for i in range (1,100*n):
         if cost[0] > n:
             break
-        while True:
-            neighbor_list = Neighbor(G,now_node)
-            next_id = random.randint(0,len(neighbor_list)-1)
-            next_node = neighbor_list[next_id]
-            if Kairyou:
-                if i >= 2:
-                    if not (sample_node[i-2] == next_node):
-                        break
-                    elif len(Neighbor(G,now_node))<=1:
-                        break
-
-                else:
-                    break
-            else:
-                break
-
-    #    G1.add_edge(now_node,next_node)
+        neighbor_list = Neighbor(G,now_node)
+        next_id = random.randint(0,len(neighbor_list)-1)
+        next_node = neighbor_list[next_id]
         sample_node.append(next_node)
         degree = len(Neighbor(G,now_node))
+        #nodes.add(now_node)
 
         sumB += 1.0/(degree)
-        sumD += degree-1
+       # sumD += degree-1
         if i >= 2:
             count += 1
             if sample_node[i-2] in Neighbor(G,sample_node[i]):
                 degree = (len(Neighbor(G,sample_node[i-1])))
-                if Kairyou:
-                    sumA += 1.0/(degree)
-                    sumC += degree - 1
-                else:
+                if degree >= 2:
                     sumA += 1.0/(degree-1)
-                    sumC += degree
-
+               # sumC += degree
         now_node = next_node
-        #nodes.add(now_node)
     sumA = sumA/count
     sumB = sumB/len(sample_node)
-    sumC = sumC/count
-    sumD = sumD/len(sample_node)
+   # sumC = sumC/count
+   # sumD = sumD/len(sample_node)
 
-    #print(sample_node)
+    #print(len(sample_node))
 
    # print(sumA/sumB)
     #print(sumC/sumD)
    # print(str(nx.number_of_nodes(G1)))
-#    print(len(list(nodes)))
+    #print(len(list(nodes)))
     return sumA/sumB
 def Estimate_plot(G,p,flag):
     y = []
@@ -1016,7 +1052,7 @@ def Estimate_plot(G,p,flag):
 def Estimate2(G,p):
     ndic = {}
     cost = [0]
-
+    nodes = set([])
     def Neighbor(G,v):
         if ndic.has_key(v):
             return ndic[v]
@@ -1028,20 +1064,18 @@ def Estimate2(G,p):
     sample_node= []
     sumA = 0.0
     sumB = 0.0
-    sumC = 0.0
-    sumD = 0.0
-    nodes = set([])
-   # G1 = nx.Graph()
-    n = (int)(p*nx.number_of_nodes(G))
-
-
+   # sumC = 0.0
+   # sumD = 0.0
+    if p <= 1:
+        n = (int)(p*nx.number_of_nodes(G))
+    else:
+        n = p
     s_node = random.choice(G.nodes())
     sample_node.append(s_node)
     now_node = s_node
+    #nodes.add(now_node)
     count = 0
-    nodes.add(now_node)
-   # G1.add_node(s_node)
-    for i in range (1,n):
+    for i in range (1,100*n):
         if cost[0] > n:
             break
         while True:
@@ -1058,20 +1092,18 @@ def Estimate2(G,p):
             else:
                 break
 
-    #    G1.add_edge(now_node,next_node)
         sample_node.append(next_node)
         degree = len(Neighbor(G,now_node))
 
         sumB += 1.0/(degree)
-        sumD += degree-1
+     #   sumD += degree-1
         if i >= 2:
             count += 1
             if sample_node[i-2] in Neighbor(G,sample_node[i]):
                 degree = (len(Neighbor(G,sample_node[i-1])))
 
                 sumA += 1.0/(degree)
-
-                sumC += degree - 1
+      #         sumC += degree - 1
         now_node = next_node
         #nodes.add(now_node)
     sumA = sumA/count
@@ -1079,13 +1111,88 @@ def Estimate2(G,p):
    # sumC = sumC/count
    # sumD = sumD/len(sample_node)
 
-    #print(sample_node)
+    #print(len(sample_node))
 
    # print(sumA/sumB)
     #print(sumC/sumD)
    # print(str(nx.number_of_nodes(G1)))
-#    print(len(list(nodes)))
+    #print(len(list(nodes)))
     return sumA/sumB
+
+def NBRWRW(G,p):
+    ndic = {}
+    ccdic = {}
+    cost = [0]
+    cc = 0.0
+
+    def Neighbor(G,v):
+        if ndic.has_key(v):
+            return ndic[v]
+        else:
+            lst = nx.neighbors(G,v)
+            cost[0] += 1
+            ndic[v] = lst
+        return lst
+    def CC(G,v):
+        if ccdic.has_key(v):
+            return ccdic[v]
+
+        else:
+            n_list = Neighbor(G,v)
+            degree = len(n_list)
+            if degree <= 1:
+                return 0
+            tri = 0
+            count2 = 0
+            for i in range(0,degree-1):
+                n2_list = Neighbor(G,n_list[i])
+                for j in range(i+1,degree):
+                    count2 += 1
+                    if n_list[j] in n2_list:
+                        tri += 1
+
+        ans =  float(tri)/count2
+        ccdic[v] = ans
+        return ans
+    sample_node= []
+    sumA = 0.0
+    sumB = 0.0
+   # sumC = 0.0
+   # sumD = 0.0
+    if p <= 1:
+        n = (int)(p*nx.number_of_nodes(G))
+    else:
+        n = p
+    s_node = random.choice(G.nodes())
+    sample_node.append(s_node)
+    now_node = s_node
+    count = 1
+    cc += CC(G,now_node)/len(Neighbor(G,now_node))
+    for i in range (1,n):
+        if cost[0] > n:
+            break
+        while True:
+            neighbor_list = Neighbor(G,now_node)
+            next_id = random.randint(0,len(neighbor_list)-1)
+            next_node = neighbor_list[next_id]
+
+            if i >= 2:
+                if not (sample_node[i-2] == next_node):
+                    break
+                elif len(Neighbor(G,now_node))<=1:
+                    break
+
+            else:
+                break
+        now_node = next_node
+        sample_node.append(now_node)
+        degree = len(Neighbor(G,now_node))
+
+        sumB += 1.0/(degree)
+        cc += CC(G,now_node)/degree
+        count += 1
+
+    return cc/sumB
 
 
 def EstimateMHRW(G,p):
@@ -1274,7 +1381,7 @@ def RWall3(G,p):
 
             if is_new_node:
                 now_node = next_node
-            if random.random() < 0.15:
+            if random.random() < 0.075:
                 next_id2 = random.randint(0,len(sampled)-1)
                 next_node2 = sampled[next_id2]
                 now_node = next_node2 # next_node

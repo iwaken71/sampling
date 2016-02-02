@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import random
 import math
 import sampling as smp
+import sys
 #グラフデータ
 '''
 data/email-Enron.txt '\t'
@@ -27,7 +28,7 @@ Filename = 'data/BA10000.txt'
 split = '\t'
 WriteFilename = "test.txt"
 title = "amazon"
-NUM = 3
+NUM = 6
 TrueValue = 0.0
 def SelectGraph(n):
     global Filename
@@ -35,34 +36,34 @@ def SelectGraph(n):
     global TrueValue
     if n == 1:
         Filename = 'data/facebook_combined.txt'
-        title = "facebook"
+        title = "Facebook"
         TrueValue = 0.6055
 
     elif n == 2:
         Filename = 'data/email-Enron.txt'
-        title = "email"
+        title = "Email"
         TrueValue = 0.497
 
     elif n == 3:
         Filename = 'data/com-amazon.ungraph.txt'
-        title = "amazon"
+        title = "Amazon"
         TrueValue = 0.3967
 
     elif n == 4:
         Filename = 'data/com-lj.ungraph.txt'
-        title = "com-lj"
+        title = "LiveJournal"
         TrueValue = 0.2843
     elif n == 5:
         Filename = 'data/com-dblp.txt'
-        title = "dblp"
+        title = "DBLP"
         TrueValue = 0.6324
     elif n == 6:
         Filename = 'data/loc-gowalla_edges.txt'
-        title = "gowalla"
+        title = "Gowalla"
         TrueValue = 0.2367
     elif n == 7:
         Filename = 'data/com-youtube.ungraph.txt'
-        title = "youtube"
+        title = "Youtube"
         TrueValue = 0.0808
     elif n == 8:
         Filename = 'data/p2p-Gnutella04.txt'
@@ -70,23 +71,29 @@ def SelectGraph(n):
         TrueValue = 0.0062175
     elif n == 9:
         Filename = 'data/com-orkut.ungraph.txt'
-        title = "orkut"
+        title = "Orkut"
         TrueValue = 0.1666
     elif n == 10:
         Filename = 'data/twitter_combined.txt'
-        title = "twitter"
+        title = "Twitter"
         TrueValue = 0.5653
+    elif n == 11:
+        Filename = 'data/web-NotreDame.txt'
+        title = 'Web'
+        TrueValue = 0.23462432072
 def main():
+    SelectGraph(NUM)
+    G = readGraph()
 
 
-        SelectGraph(NUM)
-	G = readGraph()
        # G1 = smp.BFS(G,0.01)
 #	G = nx.gnp_random_graph(10000,0.2)
 #	G = BA_model_Graph(10)
 #	G =	nx.powerlaw_cluster_graph(500000,3,0.5)
  #       print(nx.average_clustering(G))
-	print("グラフの読み込み終了")
+    print("グラフの読み込み終了")
+    print(title)
+    print(u"真値"+str(TrueValue))
         #plot_CC(G,0.01)
        # print(GCC(G))
         #print(myGCC(G,177820130))
@@ -111,42 +118,44 @@ def main():
        # print(nx.diameter(G))
        # NMSE2(G,100,3,0.01) #誤差計算 G:元のグラフ,最大次数,サンプリング回数,サンプリングの割合
  #       CC2(G,25,0.01)
-        lst = []
-        error = 0.0
-        shinchi = TrueValue
-        N =0
+    lst = []
+    error = 0.0
+    shinchi = TrueValue
+    N =0
         #
 #        print(smp.RW(G,0.01))
        # print(Soukan(G))
  #       print(smp.Draw_RW(G,0.01))
 
-        if N > 0:
-            for i in range(0,N):
-                lst.append(smp.Snowball_Sampling(G,0.01))
-                error += (lst[i]-shinchi)*(lst[i]-shinchi)
+    if N > 0:
+        for i in range(0,N):
+            lst.append(smp.RWall3(G,0.25))
+            error += (lst[i]-shinchi)*(lst[i]-shinchi)
           #  lst.append(AD(G1));
       #      lst.append(smp.Estimate(G,0.01))
            # lst.append(smp.RWall3(G,0.01))
-                print(lst[i])
+            print(lst[i])
   #      for i in range(0,25):
    #         print(lst[i])
-            error = error/N
-            error = math.sqrt(error)
+        error = error/N
+        error = math.sqrt(error)
 
-            Samp(lst)
-            print("平均二乗誤差:"+str(error))
+        Samp(lst)
+        print("平均二乗誤差:"+str(error))
 
-        Jikken(G,100,0.01,visual=False)
+
+    a = 1000
+    DaiJikken(G,N=1000,visual=False)
        # NN = 25
        # for i in xrange(NN):
            # smp.Estimate(G,0.01)
-        print(0)
+    print(0)
        # for i in xrange(NN):
            # smp.Estimate2(G,0.01)
        # nx.draw(G)
       #  plt.show()
-        print("finish")
-        return 0
+    print("finish")
+    return 0
 def plot_CC(G,p):
     n = int(len(G.nodes())*p)
     x = range(0,n)
@@ -179,6 +188,76 @@ def plot_CC(G,p):
     plt.legend()
     plt.show()
 
+def DaiJikken(G,N=1000,visual=False):
+
+    x = []
+    mhrw = []
+    rw_rw = []
+    nbrw_rw = []
+
+    for i in range(0,5):
+        p = (i+1)* 2000
+        x.append(p)
+        print("N="+str(N)+", p="+str(p))
+        lst1 = [] #MHRW
+        lst2 = [] #Estimate
+        lst3 = [] #Estimate_kairyou
+        shinchi = TrueValue
+        print("MHRW")
+        error1 = 0.0
+        for i in range(0,N):
+            lst1.append(0)#smp.MHRW(G,p))
+            if visual:
+                print(lst1[i])
+            error1 += (lst1[i]-shinchi)*(lst1[i]-shinchi)
+        error1 = error1/N
+        error1 = math.sqrt(error1)
+        error1 = error1/TrueValue
+        mhrw.append(error1)
+        error2 = 0.0
+        print("SRW")
+        for i in range(0,N):
+            lst2.append(smp.Estimate(G,p))
+            error2 += (lst2[i]-shinchi)*(lst2[i]-shinchi)
+            if visual:
+                print(lst2[i])
+        error2 = error2/N
+        error2 = math.sqrt(error2)
+        error2 = error2/TrueValue
+        rw_rw.append(error2)
+        print("NBRW")
+        error3 = 0.0
+        for i in range(0,N):
+            lst3.append(smp.Estimate2(G,p))
+            error3 += (lst3[i]-shinchi)*(lst3[i]-shinchi)
+            if visual:
+                print(lst3[i])
+        error3 = error3/N
+        error3 = math.sqrt(error3)
+        error3 = error3/TrueValue
+        nbrw_rw.append(error3)
+        print("MHRW")
+        #Samp(lst1)
+        #print("平均二乗誤差:\t"+str(error1))
+        print("Estimate")
+        Samp(lst2)
+        print("平均二乗誤差:\t"+str(error2))
+        print("Improve")
+        Samp(lst3)
+        print("平均二乗誤差:\t"+str(error3))
+    x = np.array(x)
+    #plt.plot(x,mhrw,label="MHRW-ego",color="black",linestyle="-.")
+    plt.plot(x,rw_rw,label="SRW",color="black",linestyle="--")
+    plt.plot(x,nbrw_rw,label="NBRW",color="red",linestyle="-")
+
+    plt.xlabel("Sample size",fontsize = 18)
+    plt.ylabel("NRMSE",fontsize = 18)
+    plt.title(title,fontsize = 18)
+    plt.xticks([2000,4000,6000,8000,10000], ["2000","4000","6000","8000","10000"])
+    plt.legend(loc = "best")
+    plt.show()
+
+
 def Soukan(G):
     degree = []
     av_degree = 0.0
@@ -210,6 +289,7 @@ def Soukan(G):
 
 
 def Jikken(G,N,p,visual = True):
+    print("N="+str(N)+", p="+str(p))
     lst1 = [] #RW
     lst2 = [] #MHRW
    # lst3 = [] #iwasaki
@@ -220,7 +300,7 @@ def Jikken(G,N,p,visual = True):
     '''
     print("RW")
     for i in range(0,N):
-        lst1.append(smp.RW(G,p))
+        lst1.append(smp.RWRW(G,p))
         error1 += (lst1[i]-shinchi)*(lst1[i]-shinchi)
         if visual:
             print(lst1[i])
@@ -230,13 +310,14 @@ def Jikken(G,N,p,visual = True):
     print("MHRW")
     error2 = 0.0
     for i in range(0,N):
-        lst2.append(smp.MHRW(G,p))
+    #    sys.stdout.write("|")
+        lst2.append(1)#smp.MHRW(G,p))
         error2 += (lst2[i]-shinchi)*(lst2[i]-shinchi)
         if visual:
             print(lst2[i])
     error2 = error2/N
     error2 = math.sqrt(error2)
-    print("iwasaki")
+    #print("iwasaki")
    # error3 = 0.0
    # for i in range(0,N):
     #    lst3.append(smp.RWall3(G,p))
@@ -262,31 +343,33 @@ def Jikken(G,N,p,visual = True):
             print(lst5[i])
     error5 = error5/N
     error5 = math.sqrt(error5)
-   # print("RW")
+    #print("RW")
     #Samp(lst1)
-    #print("平均二乗誤差:"+str(error1))
+   # print("平均二乗誤差:"+str(error1))
     print("MHRW")
     Samp(lst2)
-    print("平均二乗誤差:"+str(error2))
+    print("平均二乗誤差:\t"+str(error2))
    # print("iwasaki")
    # Samp(lst3)
    # print("平均二乗誤差:"+str(error3))
     print("Estimate")
     Samp(lst4)
-    print("平均二乗誤差:"+str(error4))
+    print("平均二乗誤差:\t"+str(error4))
     print("Improve")
     Samp(lst5)
-    print("平均二乗誤差:"+str(error5))
-
-
-
-
-
-
+    print("平均二乗誤差:\t"+str(error5))
 
 def readGraph():
-	G = nx.read_adjlist(Filename,delimiter=split,create_using =nx.Graph())
-	return G
+    G = nx.Graph()
+    f = open(Filename,"r")
+    for line in f:
+        args = line[:-1].split('\t')
+        if not (args[0] == args[1]):
+            G.add_edge(args[0],args[1])
+    return G
+
+	#G = nx.read_adjlist(Filename,delimiter=split,create_using =nx.Graph())
+	#return G
 
 def writeGraph(G,n):
         if n == 1:
@@ -560,9 +643,9 @@ def Samp(lst):
     hensa1 = math.sqrt(var1)
     left = ave1 - 1.96 * hensa1/(math.sqrt(len(lst)))
     right = ave1 + 1.96 * hensa1/(math.sqrt(len(lst)))
-    print("平均:"+str(ave1))
-    print("標準偏差:"+str(hensa1))
-    print("信頼区間95%"+str(left)+"~"+str(right))
+    print("平均:\t"+str(ave1))
+    print("標準偏差:\t"+str(hensa1))
+    print("信頼区間95%\t"+str(left)+"\t"+str(right))
 
 
 def DCDF(G,max_k):
